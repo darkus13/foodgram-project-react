@@ -1,14 +1,66 @@
 from rest_framework import serializers
-from users.models import User_list, Register_user
+
+from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
 
 
-class UserlistSerializer(serializers.Serializer):
+class TagSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = User_list
-        fields = ['count', 'next', 'previous', 'reults']
+        model = Tag
+        fields = '__all__'
 
-class RegisteruserSerializer(serializers.Serializer):
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    name = serializers.ReadOnlyField(source='ingredirnt.name')
+    measurement_unit = serializers.ReadOnlyField(source='ingredient.measerements_unit')
+
+    class Meta: 
+        model = RecipeIngredient
+        fields = ('id', 'name', 'measurement_unit', 'amount')
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(many=True, source='recipe_ingredients')
+
     class Meta:
-        model = Register_user
-        fields = ['email', 'id', 'username', 'first_name', 'last_name']
+        model = Recipe
+        fields = '__all__'
+
+    def get_ingredients(self, instance):
+        return RecipeIngredientSerializer(
+            instance.recipe_ingredients.all(),
+            many=True
+        ).data
+
+
+class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient',
+        queryset=Ingredient.object.all()
+    )
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
+
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
+    ingredients = RecipeIngredientCreateSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        fields = ('name', 'cooking_time', 'text', 'tags')
+
+    def create(self, validated_data):
+        ingredients = validated_data.pop('ingredients')
+        instance = super().create(validated_data)
     
+        for ingredient_data in ingredients:
+            RecipeIngredient(
+                recipe=instance,
+                ingredient=ingredient_data['ingredient'],
+                amount = ingredient_data['amount']
+            ).save()
+
+        return instance
