@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient
+from djoser.serializers import UserSerializer, UserCreateSerializer
+
+from recipes.models import Tag, Recipe, RecipeIngredient, Ingredient, User
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -37,7 +39,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         source='ingredient',
-        queryset=Ingredient.object.all()
+        queryset=Ingredient.objects.all()
     )
 
     class Meta:
@@ -64,3 +66,36 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ).save()
 
         return instance
+    
+class UserCreateSerializer(UserCreateSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'password'
+        )
+
+    def validate_username(self, value):
+        if value.lower() == 'usernmame':
+            raise serializers.ValidationError(
+                'Имя пользователя "username" нельзя использовать.'
+            )
+        return value
+
+
+class CustomUserSerializer(UserSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username', 'first_name',
+            'last_name', 'is_subscribed'
+        )
+    def get_subscribed(self, objects):
+        request = self.context.get('request')
+        if not request or request.user_is_anonymus:
+            return False
+        else:
+            return objects.following.filter(user=request.user).exists()
