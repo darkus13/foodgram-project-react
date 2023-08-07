@@ -1,16 +1,28 @@
 from django.shortcuts import render, HttpResponse
 from djoser.views import UserViewSet
-from api.serializers import TagSerializer, RecipeSerializer, RecipeCreateSerializer
+from api.serializers import TagSerializer, RecipeSerializer, RecipeCreateSerializer, UserCreateSerializer, CustomUserSerializer
 from rest_framework.viewsets import ModelViewSet
-from recipes.models import Tag, Recipe
+from backend.api import permissions
+from recipes.models import Tag, Recipe, User
+from rest_framework.response import Response
 
 
-def index(request):
-    return HttpResponse('index')
+class CustomUserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CustomUserSerializer
+        return UserCreateSerializer
+    
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
 
-class CustonUserViewSet(UserViewSet):
-    pass
+class UserCurrentView(views.APIView):
 
 
 class TagViewsSet(ModelViewSet):
