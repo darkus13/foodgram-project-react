@@ -1,6 +1,5 @@
-from django.db import models
 from django.contrib.auth import get_user_model
-
+from django.db import models
 
 User = get_user_model()
 
@@ -22,7 +21,7 @@ class Recipe(models.Model):
         'Ingredient',
         through='RecipeIngredient',
         through_fields=('recipe', 'ingredient')
-        )
+    )
 
 
 class Ingredient(models.Model):
@@ -31,6 +30,12 @@ class Ingredient(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, related_name='recipe_ingredients', on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe, related_name='recipe_ingredients', on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     amount = models.PositiveIntegerField()
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,)
