@@ -1,8 +1,12 @@
+import base64
+
+from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from backend.api.views import FavoriteViewSet
-from backend.recipes.models import Favorite
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag, User
 from rest_framework import serializers
+
+from backend.api.views import FavoriteViewSet
+from backend.recipes.models import Favorite, ShoppingCart
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -36,6 +40,37 @@ class RecipeSerializer(serializers.ModelSerializer):
             instance.recipe_ingredients.all(),
             many=True
         ).data
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('recipeingredients')
+        instance.ingredients.clear()
+        instance.tags.clear()
+        super().update(instance, validated_data)
+        instance.tags.set(tags)
+        self.create_recipe_ingredient(instance, ingredients)
+
+        return instance
+
+    def validate(self, data):
+        for field in ('tags', 'ingredients', 'name', 'text', 'cooking_time'):
+            if not self.initial_data.get(field):
+                raise serializers.ValidationError(
+                    f'Поле `{field}` не заполнено')
+        ingredients = self.initial_data['ingredients']
+        ingredients_set = set()
+        for ingredient in ingredients:
+            if not ingredient.get('amount') or not ingredient.get('id'):
+                raise serializers.ValidationError(
+                    'Укажите `amount` и `id` для ингредиента.')
+            if not int(ingredient['amount']) > 0:
+                raise serializers.ValidationError(
+                    'Количество ингредиентов не может быть меньше 1.')
+            if ingredient['id'] in ingredients_set:
+                raise serializers.ValidationError(
+                    'Исключите повторяющиеся ингредиенты.')
+            ingredients_set.add(ingredient['id'])
+        return data
 
 
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
@@ -113,7 +148,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-     class Meta:
+
+    class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
         extra_kwargs = {
@@ -134,3 +170,38 @@ class FavoriteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Рецепт добавлен в избранное.')
             return data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+        extra_kwargs = {
+            'name': {'required': False},
+            'image': {'required': False},
+            'cooking_time': {'required': False},
+        }
+
+    def validate(self, data):
+        request = self.context.get('request')
+        recipe = self.instance
+        shopping_cart = ShoppingCart.objects.filter(
+            user=request.user, recipe=recipe).exists()
+        if request.method == 'DELETE' and not shopping_cart:
+            raise serializers.ValidationError(
+                'Рецепт удален из корзины покупок.')
+        if shopping_cart:
+            raise serializers.ValidationError(
+                'Рецепт добавлен в корзину покупок.')
+        return data
+
+
+class Base64ImageField(serializers.ImageField):
+    def internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            name = {self.context["request"].user.username}
+            data = ContentFile(base64.b64decode(imgstr), name=f'{name}.' + ext)
+        return super().to_internal_value(data)
