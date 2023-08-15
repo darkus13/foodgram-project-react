@@ -1,29 +1,25 @@
 import statistics
 
 from api import permissions
-from api.permissions import IsAdminOrReadOnly
-from api.serializers import (CustomUserSerializer, IngredientSerializer,
-                             RecipeCreateSerializer, RecipeSerializer,
+from api.filters import IngredientFilter, RecipeFilter
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
+from api.serializers import (CustomUserSerializer, FavoriteSerializer,
+                             IngredientSerializer, RecipeSerializer,
+                             ShoppingCartSerializer, SubscribeSerializer,
                              TagSerializer)
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import Ingredient, Recipe, Tag, User
-from rest_framework import (DjangoFilterBackend, permissions, status, views,
-                            viewsets)
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag, User)
+from rest_framework import permissions, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-
-from backend.api.filters import IngredientFilter, RecipeFilter
-from backend.api.permissions import IsAuthorOrReadOnly
-from backend.api.serializers import (FavoriteSerializer,
-                                     ShoppingCartSerializer,
-                                     SubscribeSerializer)
-from backend.recipes.models import (Favorite, RecipeIngredient, ShoppingCart,
-                                    Subscribe)
+from users.models import Subscribe
 
 from .paginations import PageNumberPagination
 
@@ -91,8 +87,7 @@ class RecipeViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return RecipeCreateSerializer
-        return RecipeSerializer
+            return RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

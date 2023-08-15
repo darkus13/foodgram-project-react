@@ -24,14 +24,9 @@ class User(AbstractUser):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        constraints = [
-            models.CheckConstraint(
-                check=~models.Q(username='me'),
-                name='no_username_me',
-            ),
-        ]
 
     def __str__(self) -> str:
         return self.username
@@ -40,33 +35,16 @@ class User(AbstractUser):
         return self.role == self.ADMIN
 
 
-class Subscription(models.Model):
+class Subscribe(models.Model):
     user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',
-    )
+        User, on_delete=models.CASCADE, related_name='subscriber')
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following'
-    )
+        User, on_delete=models.CASCADE, related_name='following')
 
     class Meta:
-        ordering = ('id', )
+        ordering = ['-id']
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'author'],
-                name='unique_subsription',
-            ),
-            models.CheckConstraint(
-                check=~models.Q(author=models.F('user')),
-                name='check_not_self'
-            ),
-        ]
 
     def __str__(self) -> str:
-        return (f'Подписка {self.user.get_username()} '
-                f'на {self.author.get_username()}')
+        return f'Подписка {self.user.username} на {self.author.username}.'

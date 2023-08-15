@@ -23,7 +23,8 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200)
     cooking_time = models.PositiveIntegerField()
     text = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='author')
     tags = models.ManyToManyField(Tag)
     Ingredient = models.ManyToManyField(
         'Ingredient',
@@ -33,8 +34,8 @@ class Recipe(models.Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
 
     def __str__(self):
         return self.name
@@ -60,12 +61,11 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveIntegerField()
 
     class Meta:
-        ordering = ['name']
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецептах'
 
     def __str__(self):
-        return self.name
+        return f'{self.ingredient} – {self.amount}'
 
 
 class Favorite(models.Model):
@@ -73,12 +73,11 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ['name']
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
 
     def __str__(self):
-        return self.name
+        return f'{self.user} добавил {self.recipe} в избранное.'
 
 
 class ShoppingCart(models.Model):
@@ -86,21 +85,8 @@ class ShoppingCart(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ['name']
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Корзина покупок'
+        verbose_name_plural = 'Корзины покупок'
 
     def __str__(self):
-        return self.name
-
-class Subscribe(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE, related_name='subscriber')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
-
-    class Meta:
-        ordering = ['name']
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-
-    def __str__(self):
-        return self.name
+        return f'{self.user} добавил {self.recipe} в корзину покупок.'
