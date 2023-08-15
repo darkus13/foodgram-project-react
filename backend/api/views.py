@@ -13,7 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag, User)
-from rest_framework import permissions, status, views, viewsets
+from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -26,10 +26,11 @@ from .paginations import PageNumberPagination
 
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly,]
+    permission_classes = [IsAuthenticatedOrReadOnly, ]
     pagination_class = PageNumberPagination
 
-    @action(detail=True, methods=['post', 'delete'], serializer_class=SubscribeSerializer)
+    @action(detail=True, methods=['post', 'delete'],
+            serializer_class=SubscribeSerializer)
     def subscribe(self, request, id):
         author = get_object_or_404(User, pk=id)
         if self.request.method == 'POST':
@@ -54,7 +55,7 @@ class CustomUserViewSet(UserViewSet):
 
 
 class UserCurrentView(views.APIView):
-    permissions_classes = [permissions.IsAuthenticated,]
+    permissions_classes = [permissions.IsAuthenticated, ]
 
     def get_user(self, request):
         serializer = CustomUserSerializer(
@@ -65,13 +66,13 @@ class UserCurrentView(views.APIView):
 class TagViewsSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAdminOrReadOnly,]
+    permission_classes = [IsAdminOrReadOnly, ]
 
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    permission_classes = [IsAuthorOrReadOnly,]
+    permission_classes = [IsAuthorOrReadOnly, ]
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -96,7 +97,7 @@ class RecipeViewSet(ModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = [IsAdminOrReadOnly,]
+    permission_classes = [IsAdminOrReadOnly, ]
     filterset_class = IngredientFilter
     filter_backends = (DjangoFilterBackend,)
 
@@ -112,7 +113,8 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
         if request.method == 'DELETE' and favorite:
             favorite.delete()
-            return Response({'message': 'Рецепт удалён из избранного'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'message': 'Рецепт удалён из избранного'},
+                            status=status.HTTP_204_NO_CONTENT)
 
         if serializer.is_valid():
             Favorite.objects.create(user=request.user, recipe=recipe)
@@ -138,7 +140,7 @@ class ShoppingCartViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(methods=['get'], detail=False,
-            permission_classes=[IsAuthenticated,])
+            permission_classes=[IsAuthenticated, ])
     def download_shopping_cart(self, request):
         ingredients = RecipeIngredient.objects.filter(
             recipe__shopping_cart__user=request.user).values(
