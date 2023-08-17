@@ -6,17 +6,6 @@ from recipes.models import Ingredient, Recipe
 User = get_user_model()
 
 
-class IngredientFilter(FilterSet):
-    name = filters.CharFilter(
-        field_name='name',
-        lookup_expr='istartswith'
-    )
-
-    class Meta:
-        model = Ingredient
-        fields = ['name']
-
-
 class RecipeFilter(FilterSet):
     tags = AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = CharFilter(method='filter_is_favorited__in')

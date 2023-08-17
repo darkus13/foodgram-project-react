@@ -5,6 +5,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag, User)
 from rest_framework import serializers
+from django.db import transaction
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -32,6 +33,8 @@ class RecepiseSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         many=True, source='recipe_ingredients')
@@ -50,12 +53,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         instance = super().create(validated_data)
 
-        for ingredient_data in ingredients:
+        recipe_ingredients = [
             RecipeIngredient(
                 recipe=instance,
                 ingredient=ingredient_data['ingredient'],
                 amount=ingredient_data['amount']
-            ).save()
+            )
+            for ingredient_data in ingredients
+        ]
+
+        with transaction.atomic():
+            RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
         return instance
 
@@ -69,6 +77,14 @@ class RecipeSerializer(serializers.ModelSerializer):
         self.create_recipe_ingredient(instance, ingredients)
 
         return instance
+
+    def is_favorited(self, obj):
+        user = self.context.get('request').user
+        return (user.is_authenticated and obj.recipe.filter(user=user).exists())
+
+    def is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        return (user.is_authenticated and obj.shop_cart.filter(user=user).exists())
 
     def validate(self, data):
         for field in ('tags', 'ingredients', 'name', 'text', 'cooking_time'):

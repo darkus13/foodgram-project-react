@@ -1,7 +1,8 @@
 import statistics
 
+from rest_framework import filters
 from api import permissions
-from api.filters import IngredientFilter, RecipeFilter
+from api.filters import RecipeFilter
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
 from api.serializers import (CustomUserSerializer, FavoriteSerializer,
                              IngredientSerializer, RecipeSerializer,
@@ -98,7 +99,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [IsAdminOrReadOnly, ]
-    filterset_class = IngredientFilter
+    filter_backends = [filters.SearchFilter]
     filter_backends = (DjangoFilterBackend,)
 
 
