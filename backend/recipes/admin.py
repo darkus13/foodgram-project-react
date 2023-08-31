@@ -4,11 +4,18 @@ from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Tag)
 
 
+class RecipeIngredientInLine(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 1
+    min_num = 1
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'author', 'text', 'cooking_time')
     search_fields = ('name', 'author')
     list_filter = ('name', 'author', 'tags')
+    inlines = (RecipeIngredientInLine,)
     empty_value_display = '-пусто-'
 
 

@@ -10,7 +10,7 @@ class User(AbstractUser):
         validators=[username_validator],
     )
     email = models.EmailField(
-        'email адрес',
+        verbose_name='email адрес',
         max_length=254,
         unique=True,
     )
@@ -21,6 +21,14 @@ class User(AbstractUser):
     last_name = models.CharField(
         verbose_name='Фамилия',
         max_length=150,
+    )
+    password = models.CharField(
+        verbose_name='Пароль',
+        max_length=150
+    )
+    is_subscribed = models.BooleanField(
+        verbose_name='В подписках',
+        default=False,
     )
 
     class Meta:
@@ -46,5 +54,5 @@ class Subscribe(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
-    def __str__(self) -> str:
-        return f'Подписка {self.user.username} на {self.author.username}.'
+    def __str__(self):
+        return self.user

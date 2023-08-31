@@ -18,6 +18,19 @@ class Tag(models.Model):
         return self.name
 
 
+class Ingredient(models.Model):
+    name = models.CharField(max_length=200)
+    measurement_unit = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+
+    def __str__(self):
+        return self.name
+
+
 class Recipe(models.Model):
     tags = models.ManyToManyField(Tag)
     name = models.CharField(max_length=200)
@@ -25,11 +38,10 @@ class Recipe(models.Model):
     text = models.TextField()
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='author')
-    tags = models.ManyToManyField(Tag)
-    Ingredient = models.ManyToManyField(
-        'Ingredient',
-        through='RecipeIngredient',
-        through_fields=('recipe', 'ingredient')
+    image = models.ImageField(upload_to='recipes/', default=None)
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through='RecipeIngredient'
     )
 
     class Meta:
@@ -41,24 +53,12 @@ class Recipe(models.Model):
         return self.name
 
 
-class Ingredient(models.Model):
-    name = models.CharField(max_length=200)
-    measurement_unit = models.CharField(max_length=200)
-
-    class Meta:
-        ordering = ['name']
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-
-    def __str__(self):
-        return self.name
-
-
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE, related_name='recipe_ingredients')
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveIntegerField()
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE, related_name='recipe_ingredients')
+    amount = models.PositiveSmallIntegerField()
 
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
