@@ -279,8 +279,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscribe
-        fields = ("email", "id", "username", "first_name", "last_name",
-                  "is_subscribed", "recipes", "recipes_count")
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
         return True
@@ -299,4 +299,4 @@ class ActionRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ("id", "name", "image", "cooking_time")
+        fields = ('id', 'name', 'image', 'cooking_time')
