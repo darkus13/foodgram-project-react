@@ -4,8 +4,10 @@ from api.permissions import IsAdminOrReadOnly
 from api.serializers import (CustomUserSerializer, FavoriteSerializer,
                              IngredientSerializer,
                              SubscribeSerializer,
-                             TagSerializer, CreateRecipeSerializer, RecipeReadSerializer,
-                             ActionRecipeSerializer, UserCreateSerializer, SubscriptionSerializer)
+                             TagSerializer, CreateRecipeSerializer,
+                             RecipeReadSerializer,
+                             ActionRecipeSerializer, UserCreateSerializer,
+                             SubscriptionSerializer)
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,16 +17,15 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly, SAFE_METHODS)
+                                        IsAuthenticatedOrReadOnly,
+                                        SAFE_METHODS)
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from users.models import Subscribe
 from rest_framework.filters import SearchFilter
 
 from .paginations import PageNumberPagination
-from rest_framework import status
 from django.db.models import Sum
-from django.core import exceptions
 
 
 class CustomUserViewSet(UserViewSet):
@@ -150,7 +151,8 @@ class ShoppingCartViewSet(viewsets.ModelViewSet):
 
         if self.request.method == "POST":
             if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
-                return Response({'message': 'Рецепт уже находиться в списке покупок.'}),
+                return Response(
+                    {'message': 'Рецепт уже находиться в списке покупок.'}),
             ShoppingCart.objects.create(user=user, recipe=recipe)
             serializer = ActionRecipeSerializer(
                 recipe, context={"request": request})

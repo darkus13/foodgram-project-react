@@ -138,7 +138,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             [RecipeIngredient(recipe=recipe,
                               ingredient=Ingredient.objects.get(
                                   pk=ingredient_data['id']),
-                              amount=ingredient_data['amount']) for ingredient_data in ingredients]
+                              amount=ingredient_data['amount'])
+             for ingredient_data in ingredients]
         )
 
         return recipe
@@ -163,7 +164,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             [RecipeIngredient(recipe=instance,
                               ingredient=Ingredient.objects.get(
                                   pk=ingredient_data['id']),
-                              amount=ingredient_data['amount']) for ingredient_data in ingredients]
+                              amount=ingredient_data['amount'])
+             for ingredient_data in ingredients]
         )
         return super().update(instance, validated_data)
 
@@ -188,7 +190,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context={'request': self.context.get('request')}).data
+        return RecipeReadSerializer(
+            instance, context={'request': self.context.get('request')}).data
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -213,7 +216,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context={'request': self.context.get('request')}).data
+        return RecipeReadSerializer(
+            instance, context={'request': self.context.get('request')}).data
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
@@ -236,7 +240,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context={'request': self.context.get('request')}).data
+        return RecipeReadSerializer(
+            instance, context={'request': self.context.get('request')}).data
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
