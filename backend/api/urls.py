@@ -31,18 +31,3 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
-
-
-# if self.request.method == 'POST':
-#             seriaizer = SubscribeSerializer(
-#                 author=author, data=request.data, context={'request': request})
-#             seriaizer.is_valid(raise_exception=True)
-#             Subscribe.objects.create(user=request.user, author=author)
-#             return Response(seriaizer.data, status=status.HTTP_201_CREATED)
-
-#         subscribe = get_object_or_404(
-#             Subscribe, user=request.user, author=author)
-#         seriaizer = SubscribeSerializer(
-#             author=author, data=request.data, context={'request': request})
-#         subscribe.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
