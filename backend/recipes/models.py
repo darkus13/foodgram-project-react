@@ -45,7 +45,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         through="RecipeIngredient"
-        )
+    )
 
     class Meta:
         ordering = ["name"]
