@@ -6,13 +6,17 @@ User = get_user_model()
 
 
 class RecipeFilter(FilterSet):
-    tags = AllValuesMultipleFilter(field_name='tags__slug')
-    is_favorited = CharFilter(method='filter_is_favorited__in')
-    is_in_shopping_cart = CharFilter(method='filter_is_in_shopping_cart__in')
+    tags = AllValuesMultipleFilter(field_name="tags__slug")
+    is_favorited = CharFilter(method="filter_is_favorited__in")
+    is_in_shopping_cart = CharFilter(method="filter_is_in_shopping_cart__in")
 
     class Meta:
         model = Recipe
-        fields = ('author', 'tags', 'is_favorited',)
+        fields = (
+            "author",
+            "tags",
+            "is_favorited",
+        )
 
     def filter_is_favorited__in(self, queryset, name, value):
         if value:

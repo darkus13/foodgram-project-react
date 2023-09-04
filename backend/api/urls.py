@@ -1,6 +1,10 @@
-from api.views import (CustomUserViewSet, RecipeViewSet,
-                       TagViewsSet, IngredientViewSet,
-                       SubscribeViewSet)
+from api.views import (
+    CustomUserViewSet,
+    RecipeViewSet,
+    TagViewsSet,
+    IngredientViewSet,
+    SubscribeViewSet,
+)
 from django.urls import include, path
 from rest_framework import routers
 from django.conf.urls.static import static
@@ -8,28 +12,34 @@ from api.views import ShoppingCartViewSet, FavoriteViewSet
 from foodgram import settings
 
 router = routers.DefaultRouter()
-router.register(r'users', CustomUserViewSet, basename='users')
-router.register('tags', TagViewsSet, basename='tags')
-router.register('recipes', RecipeViewSet, basename='recipes')
-router.register('ingredients', IngredientViewSet, basename='ingredients')
+router.register(r"users", CustomUserViewSet, basename="users")
+router.register("tags", TagViewsSet, basename="tags")
+router.register("recipes", RecipeViewSet, basename="recipes")
+router.register("ingredients", IngredientViewSet, basename="ingredients")
 
 urlpatterns = [
-    path('recipes/<int:pk>/shopping_cart/', ShoppingCartViewSet.as_view(
-        {'post': 'shopping_cart', 'delete': 'shopping_cart'})),
-    path('recipes/download_shopping_cart/', ShoppingCartViewSet.as_view(
-        {'get': 'download_shopping_cart'})),
-    path('recipes/<int:pk>/favorite/', FavoriteViewSet.as_view(
-        {'post': 'favorite', 'delete': 'favorite'})),
-    path('users/subscriptions/', SubscribeViewSet.as_view(
-        {'get': 'subscriptions'})),
-    path('users/‹int:pk>/subscribe/', SubscribeViewSet.as_view(
-        {'post': 'subscribe', 'delete': 'subscribe'})),
-    path('', include(router.urls)),
-    path('auth/', include('djoser.urls.authtoken')),
+    path(
+        "recipes/<int:pk>/shopping_cart/",
+        ShoppingCartViewSet.as_view(
+            {"post": "shopping_cart", "delete": "shopping_cart"}
+        ),
+    ),
+    path(
+        "recipes/download_shopping_cart/",
+        ShoppingCartViewSet.as_view({"get": "download_shopping_cart"}),
+    ),
+    path(
+        "recipes/<int:pk>/favorite/",
+        FavoriteViewSet.as_view({"post": "favorite", "delete": "favorite"}),
+    ),
+    path("users/subscriptions/", SubscribeViewSet.as_view({"get": "subscriptions"})),
+    path(
+        "users/‹int:pk>/subscribe/",
+        SubscribeViewSet.as_view({"post": "subscribe", "delete": "subscribe"}),
+    ),
+    path("", include(router.urls)),
+    path("auth/", include("djoser.urls.authtoken")),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
