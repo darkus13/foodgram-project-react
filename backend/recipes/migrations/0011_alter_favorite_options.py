@@ -4,14 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('recipes', '0010_alter_recipeingredient_ingredient'),
+        ("recipes", "0010_alter_recipeingredient_ingredient"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='favorite',
-            options={'ordering': ('id',), 'verbose_name': 'Избранный рецепт', 'verbose_name_plural': 'Избранные рецепты'},
+            name="favorite",
+            options={
+                "ordering": ("id",),
+                "verbose_name": "Избранный рецепт",
+                "verbose_name_plural": "Избранные рецепты",
+            },
         ),
     ]

@@ -24,4 +24,6 @@ class Command(BaseCommand):
                     self.stdout.write(f"Создан ингредиент: {row[0]}")
                 else:
                     self.stdout.write(f"Ингредиент {row[0]} уже существует")
-            self.stdout.write(self.style.SUCCESS("Ингредиенты успешно загружены."))
+            self.stdout.write(self.style.SUCCESS(
+                "Ингредиенты успешно загружены."
+            ))

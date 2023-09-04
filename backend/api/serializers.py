@@ -1,7 +1,7 @@
 from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
-from django.db import transaction
+from djoser.serializers import (UserCreateSerializer
+                                as DjoserUserCreateSerializer)
 from rest_framework import serializers
 
 
@@ -30,7 +30,8 @@ class CustomUserSerializer(DjoserUserCreateSerializer):
 
     class Meta:
         model = User
-        fields = ("email", "id", "username", "first_name", "last_name", "is_subscribed")
+        fields = ("email", "id", "username", "first_name",
+                  "last_name", "is_subscribed")
 
     def get_is_subscribed(self, obj):
         user = self.context.get("request").user
@@ -42,7 +43,8 @@ class CustomUserSerializer(DjoserUserCreateSerializer):
 class UserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
-        fields = ("email", "id", "username", "first_name", "last_name", "password")
+        fields = ("email", "id", "username",
+                  "first_name", "last_name", "password")
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -53,7 +55,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source="ingredient.name")
-    measurement_unit = serializers.ReadOnlyField(source="ingredient.measurement_unit")
+    measurement_unit = serializers.ReadOnlyField(
+        source="ingredient.measurement_unit")
     id = serializers.ReadOnlyField(source="ingredient.id")
 
     class Meta:
@@ -72,9 +75,11 @@ class CreateIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
-    ingredients = RecipeIngredientSerializer(many=True, source="recipe_ingredients")
+    ingredients = RecipeIngredientSerializer(
+        many=True, source="recipe_ingredients")
     author = CustomUserSerializer(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True, default=False)
+    is_in_shopping_cart = serializers.BooleanField(
+        read_only=True, default=False)
     is_favorited = serializers.BooleanField(read_only=True, default=False)
 
     class Meta:
@@ -123,7 +128,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             [
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredient=Ingredient.objects.get(pk=ingredient_data["id"]),
+                    ingredient=Ingredient.objects.get(
+                        pk=ingredient_data["id"]),
                     amount=ingredient_data["amount"],
                 )
                 for ingredient_data in ingredients
@@ -135,7 +141,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             RecipeIngredient.objects.get_or_create(
-                recipe=recipe, ingredient=ingredient["id"], amount=ingredient["amount"]
+                recipe=recipe, ingredient=ingredient["id"],
+                amount=ingredient["amount"]
             )
 
     def create_tags(self, tags, recipe):
@@ -151,7 +158,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             [
                 RecipeIngredient(
                     recipe=instance,
-                    ingredient=Ingredient.objects.get(pk=ingredient_data["id"]),
+                    ingredient=Ingredient.objects.get(
+                        pk=ingredient_data["id"]),
                     amount=ingredient_data["amount"],
                 )
                 for ingredient_data in ingredients
@@ -162,7 +170,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         for field in ("tags", "ingredients", "name", "text", "cooking_time"):
             if not self.initial_data.get(field):
-                raise serializers.ValidationError(f"Поле `{field}` не заполнено")
+                raise serializers.ValidationError(
+                    f"Поле `{field}` не заполнено")
         ingredients = self.initial_data["ingredients"]
         ingredients_set = set()
         for ingredient in ingredients:
@@ -224,9 +233,11 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
             user=request.user, recipe=recipe
         ).exists()
         if request.method == "DELETE" and not shopping_cart:
-            raise serializers.ValidationError("Рецепт удален из корзины покупок.")
+            raise serializers.ValidationError(
+                "Рецепт удален из корзины покупок.")
         if shopping_cart:
-            raise serializers.ValidationError("Рецепт добавлен в корзину покупок.")
+            raise serializers.ValidationError(
+                "Рецепт добавлен в корзину покупок.")
         return data
 
     def to_representation(self, instance):
@@ -236,7 +247,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-    recipes_count = serializers.SerializerMethodField(method_name="number_of_recipes")
+    recipes_count = serializers.SerializerMethodField(
+        method_name="number_of_recipes")
     recipes = serializers.SerializerMethodField(method_name="get_recipes")
     id = serializers.ReadOnlyField(source="author.id")
 
@@ -293,7 +305,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
-        return ActionRecipeSerializer(Recipe.objects.filter(author=obj), many=True).data
+        return ActionRecipeSerializer(Recipe.objects.filter(author=obj),
+                                      many=True).data
 
     def get_recipes_count(self, obj):
         return obj.following.recipe.count()
