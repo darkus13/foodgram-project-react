@@ -40,7 +40,7 @@ class Recipe(models.Model):
                                 related_name="author")
     image = models.ImageField(upload_to="recipes/", default=None)
     ingredients = models.ManyToManyField(Ingredient,
-                                through="RecipeIngredient")
+                                          through="RecipeIngredient")
 
     class Meta:
         ordering = ["name"]

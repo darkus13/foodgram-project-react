@@ -32,7 +32,8 @@ urlpatterns = [
         "recipes/<int:pk>/favorite/",
         FavoriteViewSet.as_view({"post": "favorite", "delete": "favorite"}),
     ),
-    path("users/subscriptions/", SubscribeViewSet.as_view({"get": "subscriptions"})),
+    path("users/subscriptions/",
+         SubscribeViewSet.as_view({"get": "subscriptions"})),
     path(
         "users/‹int:pk>/subscribe/",
         SubscribeViewSet.as_view({"post": "subscribe", "delete": "subscribe"}),
@@ -42,4 +43,5 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

@@ -69,7 +69,8 @@ class SubscribeViewSet(ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
-    @action(detail=True, methods=["post"], serializer_class=SubscribeSerializer)
+    @action(detail=True, methods=["post"],
+            serializer_class=SubscribeSerializer)
     def get_subscribe(self, request, id=None):
         author = get_object_or_404(User, id=id)
 
@@ -103,8 +104,10 @@ class UserCurrentView(views.APIView):
     ]
 
     def get_user(self, request):
-        serializer = CustomUserSerializer(request.user, contex={"request": request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = CustomUserSerializer(
+            request.user, contex={"request": request})
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK)
 
 
 class TagViewsSet(viewsets.ReadOnlyModelViewSet):
@@ -167,9 +170,11 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post", "delete"])
     def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
-        favorite = Favorite.objects.filter(user=request.user, recipe=recipe).first()
+        favorite = Favorite.objects.filter(
+            user=request.user, recipe=recipe).first()
         serializer = FavoriteSerializer(
-            favorite, data=request.data, context={"request": request}
+            favorite, data=request.data,
+            context={"request": request}
         )
         user = self.request.user
 
@@ -184,13 +189,16 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             if Favorite.objects.filter(user=user, recipe=recipe).exists():
                 return Response({"message": "Рецепт уже в избранном"})
             Favorite.objects.create(user=user, recipe=recipe)
-            serializer = ActionRecipeSerializer(recipe, context={"request": request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = ActionRecipeSerializer(
+                recipe, context={"request": request})
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
         serializer.is_valid(raise_exception=True)
         Favorite.objects.create(user=request.user, recipe=recipe)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class ShoppingCartViewSet(viewsets.ModelViewSet):
@@ -202,28 +210,34 @@ class ShoppingCartViewSet(viewsets.ModelViewSet):
             user=request.user, recipe=recipe
         ).first()
 
-        serializer = ActionRecipeSerializer(recipe, context={"request": request})
+        serializer = ActionRecipeSerializer(
+            recipe, context={"request": request})
 
         if self.request.method == "POST":
-            if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            if ShoppingCart.objects.filter(user=user,
+                                           recipe=recipe).exists():
                 return Response(
                     {"message": "Рецепт уже находится в списке покупок."},
                 )
             ShoppingCart.objects.create(user=user, recipe=recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
         if request.method == "DELETE" and shopping_cart:
             shopping_cart.delete()
             return Response(
-                {"message": "Рецепт успешно удалён."}, status=status.HTTP_204_NO_CONTENT
+                {"message": "Рецепт успешно удалён."},
+                status=status.HTTP_204_NO_CONTENT
             )
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
 
-    @action(detail=False, methods=("get",), permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=("get",),
+            permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        shopping_cart = list(ShoppingCart.objects.filter(user=self.request.user))
-        print(shopping_cart, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        shopping_cart = list(
+            ShoppingCart.objects.filter(user=self.request.user))
         recipes = [item.recipe.id for item in shopping_cart]
         buy_list = (
             RecipeIngredient.objects.filter(recipe__in=recipes)
