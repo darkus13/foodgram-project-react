@@ -36,11 +36,16 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200)
     cooking_time = models.PositiveIntegerField()
     text = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE,
-                                related_name="author")
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="author"
+    )
     image = models.ImageField(upload_to="recipes/", default=None)
-    ingredients = models.ManyToManyField(Ingredient,
-                                          through="RecipeIngredient")
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through="RecipeIngredient"
+        )
 
     class Meta:
         ordering = ["name"]
