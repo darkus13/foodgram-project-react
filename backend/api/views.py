@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Exists, OuterRef, Sum
 from djoser.views import UserViewSet
 
-from rest_framework import status, views, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -25,7 +25,6 @@ from api.serializers import (
     TagSerializer,
     CreateRecipeSerializer,
     RecipeReadSerializer,
-    ActionRecipeSerializer,
     UserCreateSerializer,
     SubscriptionSerializer,
 )
@@ -161,16 +160,14 @@ class RecipeBaseMixin:
     def add_to_model(self, request, pk):
         obj = self.get_object()
         user = self.request.user
-        model = self.model_class.objects.filter(
-            user=request.user, **{self.model_field: obj}
-        ).first()
 
         serializer = self.serializer_class(
             obj, context={"request": request})
 
         if self.request.method == "POST":
-            if self.model_class.objects.filter(user=user,
-                                               **{self.model_field: obj}).exists():
+            if self.model_class.objects.filter(
+                    user=user,
+                    **{self.model_field: obj}).exists():
                 return Response(
                     {"message": f"{self.model_name} уже добавлен."},
                 )
@@ -181,7 +178,6 @@ class RecipeBaseMixin:
 
     def delete_to_model(self, request, pk):
         obj = self.get_object()
-        user = self.request.user
         model = self.model_class.objects.filter(
             user=request.user, **{self.model_field: obj}
         ).first()
