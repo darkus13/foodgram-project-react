@@ -73,21 +73,19 @@ class SubscribeViewSet(ModelViewSet):
             serializer_class=SubscribeSerializer)
     def get_subscribe(self, request, id=None):
         author = get_object_or_404(User, id=id)
-
-        if self.request.method == "POST":
-            Subscribe.objects.create(user=request.user, author=author)
-            return Response(status=status.HTTP_201_CREATED)
+        Subscribe.objects.create(user=request.user, author=author)
+        return Response(status=status.HTTP_201_CREATED)
 
     @get_subscribe.mapping.delete
     def delete_subcsribe(self, request, id=None):
         author = get_object_or_404(User, id=id)
+        del_count, _ = Subscribe.objects.filter(
+            user=request.user, author=author
+        ).delete()
 
-        if self.request.method == "DELETE":
-            subscribe_list = author.following.first()
-            if not subscribe_list:
-                return Response(status=status.HTTP_204_NO_CONTENT)
-
-            subscribe_list.delete()
+        if del_count:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=["get"])
     def subscriptions(self, request):
@@ -96,18 +94,6 @@ class SubscribeViewSet(ModelViewSet):
             queryset, many=True, context={"request": request}
         )
         return Response(serializer.data)
-
-
-class UserCurrentView(views.APIView):
-    permissions_classes = [
-        IsAuthenticated,
-    ]
-
-    def get_user(self, request):
-        serializer = CustomUserSerializer(
-            request.user, contex={"request": request})
-        return Response(serializer.data,
-                        status=status.HTTP_200_OK)
 
 
 class TagViewsSet(viewsets.ReadOnlyModelViewSet):
@@ -128,6 +114,12 @@ class RecipeViewSet(ModelViewSet):
     filterset_class = RecipeFilter
 
     def get_queryset(self):
+        queryset = (
+            Recipe.objects
+            .select_related("author")
+            .prefetch_related("tags")
+        )
+
         if self.request.user.is_authenticated:
             queryset = Recipe.objects.annotate(
                 is_favorited=Exists(
@@ -142,9 +134,9 @@ class RecipeViewSet(ModelViewSet):
                         recipe_id=OuterRef("pk"),
                     )
                 ),
-            ).select_related("author")
+            ).select_related("author").prefetch_related("tags")
 
-            return queryset
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == SAFE_METHODS:
@@ -164,74 +156,71 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     ]
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
-    serializer_class = FavoriteSerializer
+class RecipeBaseMixin:
 
-    @action(detail=True, methods=["post", "delete"])
-    def favorite(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        favorite = Favorite.objects.filter(
-            user=request.user, recipe=recipe).first()
-        serializer = FavoriteSerializer(
-            favorite, data=request.data,
-            context={"request": request}
-        )
+    def add_to_model(self, request, pk):
+        obj = self.get_object()
         user = self.request.user
-
-        if request.method == "DELETE" and favorite:
-            favorite.delete()
-            return Response(
-                {"message": "Рецепт успешно удален из избранного"},
-                status=status.HTTP_204_NO_CONTENT,
-            )
-
-        if self.request.method == "POST":
-            if Favorite.objects.filter(user=user, recipe=recipe).exists():
-                return Response({"message": "Рецепт уже в избранном"})
-            Favorite.objects.create(user=user, recipe=recipe)
-            serializer = ActionRecipeSerializer(
-                recipe, context={"request": request})
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-
-        serializer.is_valid(raise_exception=True)
-        Favorite.objects.create(user=request.user, recipe=recipe)
-
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
-
-
-class ShoppingCartViewSet(viewsets.ModelViewSet):
-    @action(methods=["post", "delete"], detail=True)
-    def shopping_cart(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        user = self.request.user
-        shopping_cart = ShoppingCart.objects.filter(
-            user=request.user, recipe=recipe
+        model = self.model_class.objects.filter(
+            user=request.user, **{self.model_field: obj}
         ).first()
 
-        serializer = ActionRecipeSerializer(
-            recipe, context={"request": request})
+        serializer = self.serializer_class(
+            obj, context={"request": request})
 
         if self.request.method == "POST":
-            if ShoppingCart.objects.filter(user=user,
-                                           recipe=recipe).exists():
+            if self.model_class.objects.filter(user=user,
+                                               **{self.model_field: obj}).exists():
                 return Response(
-                    {"message": "Рецепт уже находится в списке покупок."},
+                    {"message": f"{self.model_name} уже добавлен."},
                 )
-            ShoppingCart.objects.create(user=user, recipe=recipe)
+            self.model_class.objects.create(
+                user=user, **{self.model_field: obj})
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
 
-        if request.method == "DELETE" and shopping_cart:
-            shopping_cart.delete()
+    def delete_to_model(self, request, pk):
+        obj = self.get_object()
+        user = self.request.user
+        model = self.model_class.objects.filter(
+            user=request.user, **{self.model_field: obj}
+        ).first()
+
+        serializer = self.serializer_class(
+            obj, context={"request": request})
+
+        if request.method == "DELETE" and model:
+            model.delete()
             return Response(
-                {"message": "Рецепт успешно удалён."},
+                {"message": f"{self.model_name} успешно удален."},
                 status=status.HTTP_204_NO_CONTENT
             )
 
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
+
+
+class FavoriteViewSet(RecipeBaseMixin, viewsets.ModelViewSet):
+    serializer_class = FavoriteSerializer
+
+    @action(detail=True, methods=["post", "delete"])
+    def favorite(self, request, pk):
+
+        if request.method == "DELETE":
+            return self.delete_to_model(request, pk)
+
+        if self.request.method == "POST":
+            return self.add_to_model(request, pk)
+
+
+class ShoppingCartViewSet(RecipeBaseMixin, viewsets.ModelViewSet):
+    @action(methods=["post", "delete"], detail=True)
+    def shopping_cart(self, request, pk):
+        if self.request.method == "POST":
+            return self.add_to_model(request, pk)
+
+        if request.method == "DELETE":
+            self.delete_to_model(request, pk)
 
     @action(detail=False, methods=("get",),
             permission_classes=(IsAuthenticated,))

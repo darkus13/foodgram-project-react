@@ -1,14 +1,10 @@
-from api.views import (
-    CustomUserViewSet,
-    RecipeViewSet,
-    TagViewsSet,
-    IngredientViewSet,
-    SubscribeViewSet,
-)
+from django.conf.urls.static import static
 from django.urls import include, path
 from rest_framework import routers
-from django.conf.urls.static import static
-from api.views import ShoppingCartViewSet, FavoriteViewSet
+
+from api.views import (CustomUserViewSet, RecipeViewSet,
+                       TagViewsSet, IngredientViewSet,
+                       SubscribeViewSet, ShoppingCartViewSet, FavoriteViewSet)
 from foodgram import settings
 
 router = routers.DefaultRouter()

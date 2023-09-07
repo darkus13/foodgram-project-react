@@ -1,5 +1,4 @@
 from django.db import transaction
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from djoser.serializers import (UserCreateSerializer
                                 as DjoserUserCreateSerializer)
 from rest_framework import serializers
@@ -25,7 +24,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CustomUserSerializer(DjoserUserCreateSerializer):
+class UserSerializer(DjoserUserCreateSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -40,7 +39,7 @@ class CustomUserSerializer(DjoserUserCreateSerializer):
         return Subscribe.objects.filter(user=user, author=obj).exists()
 
 
-class UserCreateSerializer(UserCreateSerializer):
+class UserCreateSerializer(DjoserUserCreateSerializer):
     class Meta:
         model = User
         fields = ("email", "id", "username",
@@ -65,8 +64,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class CreateIngredientSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-    amount = serializers.IntegerField()
 
     class Meta:
         model = Ingredient
@@ -77,7 +74,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         many=True, source="recipe_ingredients")
-    author = CustomUserSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     is_in_shopping_cart = serializers.BooleanField(
         read_only=True, default=False)
     is_favorited = serializers.BooleanField(read_only=True, default=False)
@@ -140,31 +137,43 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
-            RecipeIngredient.objects.get_or_create(
-                recipe=recipe, ingredient=ingredient["id"],
+            recipe_ingredient = RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient["id"],
                 amount=ingredient["amount"]
             )
+            recipe_ingredient.append(recipe_ingredient)
+
+        RecipeIngredient.objects.bulk_create(recipe_ingredient)
 
     def create_tags(self, tags, recipe):
         for tag in tags:
-            recipe.tags.add(tag)
+            recipe.tags.set(tag)
 
     @transaction.atomic
     def update(self, instance, validated_data):
         old_recipe = instance.recipe_ingredients.all()
         old_recipe.delete()
         ingredients = validated_data.pop("ingredients")
-        RecipeIngredient.objects.bulk_create(
-            [
-                RecipeIngredient(
-                    recipe=instance,
-                    ingredient=Ingredient.objects.get(
-                        pk=ingredient_data["id"]),
-                    amount=ingredient_data["amount"],
-                )
-                for ingredient_data in ingredients
-            ]
-        )
+
+        ingredient_ids = [ingredient_data["id"]
+                          for ingredient_data in ingredients]
+
+        ingredient_mapping = {
+            ingredient.id: ingredient
+            for ingredient in Ingredient.objects.filter(pk__in=ingredient_ids)
+        }
+
+        recipe_ingredients = [
+            RecipeIngredient(
+                recipe=instance,
+                ingredient=ingredient_mapping[ingredient_data["id"]],
+                amount=ingredient_data["amount"],
+            )
+            for ingredient_data in ingredients
+        ]
+
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return super().update(instance, validated_data)
 
     def validate(self, data):
