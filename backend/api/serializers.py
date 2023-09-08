@@ -1,5 +1,6 @@
 from django.db import transaction
-from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
+from djoser.serializers import (UserCreateSerializer
+                                as DjoserUserCreateSerializer)
 from rest_framework import serializers
 
 from users.models import Subscribe
@@ -134,7 +135,9 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             recipe_ingredient = RecipeIngredient(
-                recipe=recipe, ingredient=ingredient["id"], amount=ingredient["amount"]
+                recipe=recipe,
+                ingredient=ingredient["id"],
+                amount=ingredient["amount"]
             )
             recipe_ingredient.append(recipe_ingredient)
 
@@ -307,7 +310,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
-        return ActionRecipeSerializer(Recipe.objects.filter(author=obj), many=True).data
+        return ActionRecipeSerializer(Recipe.objects.filter(author=obj),
+                                      many=True).data
 
     def get_recipes_count(self, obj):
         return obj.following.recipe.count()
