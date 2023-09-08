@@ -146,7 +146,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        old_recipe = instance.recipe_ingredients.all().delete()
+        instance.recipe_ingredients.all().delete()
         ingredients = validated_data.pop("ingredients")
 
         ingredient_ids = [ingredient_data["id"]
