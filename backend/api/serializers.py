@@ -1,8 +1,6 @@
 from django.db import transaction
-from djoser.serializers import (UserCreateSerializer
-                                as DjoserUserCreateSerializer)
+from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
 from rest_framework import serializers
-
 
 from users.models import Subscribe
 from recipes.models import (
@@ -64,7 +62,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class CreateIngredientSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Ingredient
         fields = ("id", "amount")
@@ -125,8 +122,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             [
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredient=Ingredient.objects.get(
-                        pk=ingredient_data["id"]),
+                    ingredient_id=ingredient_data["id"],
                     amount=ingredient_data["amount"],
                 )
                 for ingredient_data in ingredients
@@ -138,9 +134,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             recipe_ingredient = RecipeIngredient(
-                recipe=recipe,
-                ingredient=ingredient["id"],
-                amount=ingredient["amount"]
+                recipe=recipe, ingredient=ingredient["id"], amount=ingredient["amount"]
             )
             recipe_ingredient.append(recipe_ingredient)
 
@@ -152,8 +146,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        old_recipe = instance.recipe_ingredients.all()
-        old_recipe.delete()
+        old_recipe = instance.recipe_ingredients.all().delete()
         ingredients = validated_data.pop("ingredients")
 
         ingredient_ids = [ingredient_data["id"]
@@ -314,8 +307,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
-        return ActionRecipeSerializer(Recipe.objects.filter(author=obj),
-                                      many=True).data
+        return ActionRecipeSerializer(Recipe.objects.filter(author=obj), many=True).data
 
     def get_recipes_count(self, obj):
         return obj.following.recipe.count()

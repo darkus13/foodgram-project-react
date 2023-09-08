@@ -120,7 +120,7 @@ class RecipeViewSet(ModelViewSet):
         )
 
         if self.request.user.is_authenticated:
-            queryset = Recipe.objects.annotate(
+            queryset = super().get_queryset().annotate(
                 is_favorited=Exists(
                     Favorite.objects.filter(
                         user=self.request.user,
@@ -133,9 +133,8 @@ class RecipeViewSet(ModelViewSet):
                         recipe_id=OuterRef("pk"),
                     )
                 ),
-            ).select_related("author").prefetch_related("tags")
-
-        return queryset
+            )
+            return queryset
 
     def get_serializer_class(self):
         if self.request.method == SAFE_METHODS:
@@ -157,24 +156,23 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeBaseMixin:
 
-    def add_to_model(self, request, pk):
+    def create_relation(self, request, pk):
         obj = self.get_object()
         user = self.request.user
 
         serializer = self.serializer_class(
             obj, context={"request": request})
 
-        if self.request.method == "POST":
-            if self.model_class.objects.filter(
-                    user=user,
-                    **{self.model_field: obj}).exists():
-                return Response(
-                    {"message": f"{self.model_name} уже добавлен."},
-                )
-            self.model_class.objects.create(
-                user=user, **{self.model_field: obj})
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
+        if self.model_class.objects.filter(
+                user=user,
+                **{self.model_field: obj}).exists():
+            return Response(
+                {"message": f"{self.model_name} уже добавлен."},
+            )
+        self.model_class.objects.create(
+            user=user, **{self.model_field: obj})
+        return Response(serializer.data,
+                        status=status.HTTP_400_BAD_REQUEST)
 
     def delete_to_model(self, request, pk):
         obj = self.get_object()
@@ -199,21 +197,20 @@ class RecipeBaseMixin:
 class FavoriteViewSet(RecipeBaseMixin, viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
 
-    @action(detail=True, methods=["post", "delete"])
+    @action(detail=True, methods=["post"])
     def favorite(self, request, pk):
+        return self.create_relation(request, pk)
 
-        if request.method == "DELETE":
-            return self.delete_to_model(request, pk)
-
-        if self.request.method == "POST":
-            return self.add_to_model(request, pk)
+    @favorite.mapping.delete
+    def favorite_delete(self, request, pk):
+        return self.delete_to_model(request, pk)
 
 
 class ShoppingCartViewSet(RecipeBaseMixin, viewsets.ModelViewSet):
     @action(methods=["post", "delete"], detail=True)
     def shopping_cart(self, request, pk):
         if self.request.method == "POST":
-            return self.add_to_model(request, pk)
+            return self.create_relation(request, pk)
 
         if request.method == "DELETE":
             self.delete_to_model(request, pk)
