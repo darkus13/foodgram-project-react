@@ -10,7 +10,7 @@ services:
     container_name: foodgram_db
     image: postgres:13.10
     env_file:
-      -.env
+      - ./.env
     volumes:
       - pg_data:/var/lib/postgresql/data
 
@@ -24,7 +24,7 @@ services:
       cp -r /app/collected_static/. /app/static/ &&
       gunicorn --bind 0:8000 foodgram.wsgi'
     env_file:
-      - .env
+      - ./.env
     volumes:
       - static:/app/static/
       - media:/app/media/
@@ -43,7 +43,7 @@ services:
     container_name: foodgram_nginx
     image: nginx:1.19.3
     env_file:
-      - .env
+      - ./.env
     ports:
       - 80:80
     volumes:
