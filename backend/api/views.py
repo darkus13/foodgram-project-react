@@ -18,7 +18,6 @@ from rest_framework.filters import SearchFilter
 from api.filters import RecipeFilter
 from api.permissions import IsAdminOrReadOnly
 from api.serializers import (
-    CustomUserSerializer,
     FavoriteSerializer,
     IngredientSerializer,
     SubscribeSerializer,
@@ -27,6 +26,7 @@ from api.serializers import (
     RecipeReadSerializer,
     UserCreateSerializer,
     SubscriptionSerializer,
+    UserSerializer,
 )
 from api.utils import create_shopping_cart
 
@@ -53,7 +53,7 @@ class CustomUserViewSet(UserViewSet):
     def get_serializer_class(self):
         if self.request.method == "POST":
             return UserCreateSerializer
-        return CustomUserSerializer
+        return UserSerializer
 
 
 class SubscribeViewSet(ModelViewSet):

@@ -1,6 +1,8 @@
 from django.db import transaction
-from djoser.serializers import (UserCreateSerializer
-                                as DjoserUserCreateSerializer)
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer
+)
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from users.models import Subscribe
@@ -23,7 +25,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class UserSerializer(DjoserUserCreateSerializer):
+class UserCreateSerializer(DjoserUserCreateSerializer):
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -38,7 +40,7 @@ class UserSerializer(DjoserUserCreateSerializer):
         return Subscribe.objects.filter(user=user, author=obj).exists()
 
 
-class UserCreateSerializer(DjoserUserCreateSerializer):
+class UserSerializer(DjoserUserSerializer):
     class Meta:
         model = User
         fields = ("email", "id", "username",
