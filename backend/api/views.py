@@ -4,11 +4,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Exists, OuterRef, Sum
 from djoser.views import UserViewSet
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
-    IsAuthenticatedOrReadOnly
+    IsAuthenticatedOrReadOnly,
+    SAFE_METHODS,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -21,9 +22,9 @@ from api.serializers import (
     IngredientSerializer,
     SubscribeSerializer,
     TagSerializer,
+    UserСreateSerializer,
     CreateRecipeSerializer,
     ActionRecipeSerializer,
-    UserCreateSerializer,
     SubscriptionSerializer,
     UserSerializer,
 )
@@ -51,7 +52,7 @@ class CustomUserViewSet(UserViewSet):
 
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return UserCreateSerializer
+            return UserСreateSerializer
         return UserSerializer
 
 
@@ -72,7 +73,7 @@ class SubscribeViewSet(ModelViewSet):
             serializer_class=SubscribeSerializer)
     def subscribe(self, request, pk=None):
         if self.request.method == 'POST':
-            author = get_object_or_404(User, pk=pk)
+            author = get_object_or_404(User, pk=id)
             Subscribe.objects.create(user=request.user, author=author)
             return Response(status=status.HTTP_201_CREATED)
 
@@ -144,7 +145,6 @@ class RecipeViewSet(ModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None
     permission_classes = [
         IsAuthenticatedOrReadOnly,
     ]
