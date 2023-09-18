@@ -144,6 +144,7 @@ class RecipeViewSet(ModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = None
     permission_classes = [
         IsAuthenticatedOrReadOnly,
     ]
