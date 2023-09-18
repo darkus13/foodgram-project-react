@@ -153,26 +153,24 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
-
     def create_tags(self, tags, recipe):
         for tag in tags:
             recipe.tags.set(tag)
 
-
     @transaction.atomic
-    def update(self, instance, validated_data): 
+    def update(self, instance, validated_data):
         instance.recipe_ingredients.all().delete()
-        ingredients = validated_data.pop("ingredients") 
-        RecipeIngredient.objects.bulk_create( 
-            [ 
-                RecipeIngredient( 
-                    recipe=instance, 
+        ingredients = validated_data.pop("ingredients")
+        RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(
+                    recipe=instance,
                     ingredient=ingredient_data.get("ingredient"),
-                    amount=ingredient_data["amount"], 
-                ) 
-                for ingredient_data in ingredients 
-            ] 
-        ) 
+                    amount=ingredient_data["amount"],
+                )
+                for ingredient_data in ingredients
+            ]
+        )
         return super().update(instance, validated_data)
 
     def validate(self, data):
