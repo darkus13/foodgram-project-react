@@ -65,8 +65,13 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class CreateIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient',
+        queryset=Ingredient.objects.all()
+    )
+
     class Meta:
-        model = Ingredient
+        model = RecipeIngredient
         fields = ("id", "amount")
 
 
@@ -125,7 +130,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             [
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredient_id=ingredient_data["id"],
+                    ingredient=ingredient_data.get("ingredient"),
                     amount=ingredient_data["amount"],
                 )
                 for ingredient_data in ingredients
@@ -135,15 +140,16 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def create_ingredients(self, ingredients, recipe):
+        recipe_ingredients = []
         for ingredient in ingredients:
             recipe_ingredient = RecipeIngredient(
                 recipe=recipe,
                 ingredient=ingredient["id"],
                 amount=ingredient["amount"]
             )
-            recipe_ingredient.append(recipe_ingredient)
+            recipe_ingredients.append(recipe_ingredient)
 
-        RecipeIngredient.objects.bulk_create(recipe_ingredient)
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create_tags(self, tags, recipe):
         for tag in tags:
@@ -153,25 +159,16 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.recipe_ingredients.all().delete()
         ingredients = validated_data.pop("ingredients")
-
-        ingredient_ids = [ingredient_data["id"]
-                          for ingredient_data in ingredients]
-
-        ingredient_mapping = {
-            ingredient.id: ingredient
-            for ingredient in Ingredient.objects.filter(pk__in=ingredient_ids)
-        }
-
-        recipe_ingredients = [
-            RecipeIngredient(
-                recipe=instance,
-                ingredient=ingredient_mapping[ingredient_data["id"]],
-                amount=ingredient_data["amount"],
-            )
-            for ingredient_data in ingredients
-        ]
-
-        RecipeIngredient.objects.bulk_create(recipe_ingredients)
+        RecipeIngredient.objects.bulk_create(
+            [
+                RecipeIngredient(
+                    recipe=instance,
+                    ingredient=ingredient_data.get("ingredient"),
+                    amount=ingredient_data["amount"],
+                )
+                for ingredient_data in ingredients
+            ]
+        )
         return super().update(instance, validated_data)
 
     def validate(self, data):
@@ -282,17 +279,11 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    email = serializers.ReadOnlyField(source="author.email")
-    id = serializers.IntegerField(source="following.id", read_only=True)
-    username = serializers.ReadOnlyField(source="author.username")
-    first_name = serializers.ReadOnlyField(source="author.first_name")
-    last_name = serializers.ReadOnlyField(source="author.last_name")
-    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
-        model = Subscribe
+        model = User
         fields = (
             "email",
             "id",
@@ -316,7 +307,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                                       many=True).data
 
     def get_recipes_count(self, obj):
-        return obj.following.recipe.count()
+        return Recipe.objects.filter(author=obj).count()
 
 
 class ActionRecipeSerializer(serializers.ModelSerializer):

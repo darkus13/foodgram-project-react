@@ -29,7 +29,7 @@ urlpatterns = [
     path("users/subscriptions/",
          SubscribeViewSet.as_view({"get": "subscriptions"})),
     path(
-        "users/‹int:pk>/subscribe/",
+        "users/<int:pk>/subscribe/",
         SubscribeViewSet.as_view({"post": "subscribe", "delete": "subscribe"}),
     ),
     path("", include(router.urls)),
