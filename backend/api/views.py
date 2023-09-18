@@ -72,7 +72,7 @@ class SubscribeViewSet(ModelViewSet):
             serializer_class=SubscribeSerializer)
     def subscribe(self, request, pk=None):
         if self.request.method == 'POST':
-            author = get_object_or_404(User, pk=id)
+            author = get_object_or_404(User, pk=pk)
             Subscribe.objects.create(user=request.user, author=author)
             return Response(status=status.HTTP_201_CREATED)
 
