@@ -4,12 +4,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Exists, OuterRef, Sum
 from djoser.views import UserViewSet
 
-from rest_framework import status, viewsets, mixins
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
-    SAFE_METHODS,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
