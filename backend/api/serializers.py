@@ -105,6 +105,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 class CreateRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=False, allow_null=True)
     ingredients = CreateIngredientSerializer(many=True)
+    cooking_time = serializers.IntegerField()
 
     author = UserSerializer(read_only=True)
 
@@ -194,6 +195,15 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
                     "Исключите повторяющиеся ингредиенты."
                 )
             ingredients_set.add(ingredient["id"])
+        return data
+
+    def validate_cooking_time(self, data):
+        cooking_time = self.initial_data.get('cooking_time')
+        if int(cooking_time) < 1:
+            raise serializers.ValidationError(
+                'Время приготовления не может быть меньше 1 минуты'
+            )
+
         return data
 
     def to_representation(self, instance):

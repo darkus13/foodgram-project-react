@@ -150,7 +150,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     ]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = [
-        "$name",
+        "^name",
     ]
 
 
